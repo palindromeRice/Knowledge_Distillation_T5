@@ -1,72 +1,67 @@
-# 🧠 T5 Knowledge Distillation for Summarization
+# T5 Knowledge Distillation for Summarization
 
-This project demonstrates how to perform knowledge distillation from a fine‐tuned **T5‑Base** model to a lightweight **T5‑Small** model using the [News Summary Dataset](https://www.kaggle.com/datasets/sunnysai12345/news-summary).
+Distillation of a news-summarization T5-Base teacher into T5-Small, about a third of its size. After
+3 epochs of distillation on the Kaggle News Summary dataset, the student keeps **about 90% of the
+teacher's ROUGE** (90.8% ROUGE-1, 89.5% ROUGE-2, 90.3% ROUGE-L) and **84.7% of its BERTScore**.
 
----
+## Why
 
-## 📘 Project Overview
+Summarization models are often deployed where a base-size model is too slow or too large. The
+question here is how much of a specialized teacher's quality a much smaller student can keep when
+it learns from the teacher's output distribution rather than from the reference summaries alone.
 
-This notebook shows how to:
+## How it works
 
-1. **Distill** a fine‑tuned T5‑Base teacher into a T5‑Small student using KL Divergence and Cross‑Entropy  
-2. **Evaluate** both models using **ROUGE** and **BERTScore**  
-3. Report **knowledge retention** by comparing student scores relative to teacher scores  
+The teacher is `mrm8488/t5-base-finetuned-summarize-news`, a T5-Base already fine-tuned on this
+dataset; it stays frozen. The student starts from the general `google-t5/t5-small` checkpoint. For
+each article both models score the reference summary, and the student is trained on an equal mix of
+two losses: KL divergence to the teacher's token distribution (temperature 1.0) and cross-entropy on
+the reference summary.
 
-> ✅ Our goal is not to maximize absolute performance but to observe **knowledge retention** through distillation.
+```mermaid
+flowchart LR
+    X[News article] --> T[T5-Base teacher, frozen]
+    X --> S[T5-Small student]
+    T -- token distribution --> KL[KL divergence]
+    S --> KL
+    S --> CE[Cross-entropy vs reference]
+    KL --> L[0.5 KL + 0.5 CE]
+    CE --> L
+    L -- update --> S
+```
 
----
+## Evaluation and results
 
-## 🧠 Model Setup & Important Notes
+Both models summarize 100 articles, scored with ROUGE F1 and BERTScore F1 (`roberta-large`).
+Retention is the student score as a percentage of the teacher score.
 
-- **Teacher model**: `mrm8488/t5-base-finetuned-summarize-news` — already **fine‑tuned** on this news summarization task (we did **not** fine‑tune it ourselves).  
-- **Student model**: `google-t5/t5-small` — used **without** additional fine‑tuning.  
-- This configuration follows the [PyTorch Torchtune KD tutorial](https://pytorch.org/torchtune/0.3/tutorials/llama_kd_tutorial.html), which shows that transferring knowledge from a specialized teacher into a non‑fine‑tuned student best highlights the effect of distillation.  
-- ⚠️ Teacher performance (ROUGE, BERTScore) depends entirely on the original fine‑tuning quality by the model uploader.
+| Metric | Teacher (T5-Base) | Student (T5-Small) | Retention |
+|---|:-:|:-:|:-:|
+| ROUGE-1 | 0.2297 | 0.2086 | 90.8% |
+| ROUGE-2 | 0.1407 | 0.1259 | 89.5% |
+| ROUGE-L | 0.1771 | 0.1599 | 90.3% |
+| BERTScore | 0.1747 | 0.1480 | 84.7% |
 
----
+The goal is retention, not absolute quality: the teacher's scores depend on its original
+fine-tuning, which was not done here.
 
-## 📥 Dataset
+## Limitations
 
-We used the **[News Summary Dataset](https://www.kaggle.com/datasets/sunnysai12345/news-summary)** from Kaggle, as it was also used by the original author who fine-tuned the teacher model for this task. This ensures consistency in training objectives and evaluation.
+- The 100 evaluation articles are drawn from the same CSV used for distillation, so the scores
+  measure agreement on seen data, not generalization.
+- Small evaluation set and a single run; retention figures carry noticeable variance.
+- No comparison against a student fine-tuned on references alone, so the gain attributable to the
+  teacher signal is not isolated.
 
-- `news_summary.csv` — Contains the main dataset with `text` (article) and `ctext` (summary) columns. Used for both knowledge distillation and evaluation.  
-- `news_summary_more.csv` — Provides additional raw articles (not directly used in this notebook).
+## License and citation
 
+Released under the MIT License (see `LICENSE`). If you use this work, please cite:
 
----
-
-## 📂 Repository Contents
-
-- `KD.ipynb` — Colab‑compatible notebook containing:  
-  - Dataset download & exploration  
-  - Knowledge distillation training loop  
-  - Evaluation (ROUGE, BERTScore, retention)  
-
----
-
-## 🚀 How to Use
-
-Run all cells in order:
-
-1. **Download dataset** via `kagglehub`  
-2. **Load & filter data**  
-3. **Distill** T5‑Base → T5‑Small  
-4. **Evaluate** models and compute retention  
-
----
-
-## 📊 Metrics Used
-
-- **ROUGE‑1, ROUGE‑2, ROUGE‑L** — n‑gram overlap with reference summaries  
-- **BERTScore (F1)** using `roberta-large` — semantic similarity  
-- **Retention (%)** = (student_score / teacher_score) × 100
-
----
-
-## ⚠️ Notebook Rendering on GitHub
-
-The Jupyter notebook in this repository currently **won’t render properly** on GitHub due to a known issue (“state” key missing in `metadata.widgets`). For details, see [GitHub Discussion #155944](https://github.com/orgs/community/discussions/155944).
-
-📥 **Workaround:** Download the notebook (`KD.ipynb`) and open it locally in VS-Code and use the Jupyter notebook extension to view all cells and outputs correctly.
-
-
+```bibtex
+@misc{chawla2025t5distillation,
+  author       = {Chawla, Naman},
+  title        = {T5 Knowledge Distillation for Summarization},
+  year         = {2025},
+  howpublished = {\url{https://github.com/palindromeRice/Knowledge_Distillation_T5}}
+}
+```
