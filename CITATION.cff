@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use this software or its results, please cite it as below."
+title: "T5 Knowledge Distillation for Summarization"
+authors:
+  - family-names: Chawla
+    given-names: Naman
+repository-code: "https://github.com/palindromeRice/Knowledge_Distillation_T5"
+license: Apache-2.0

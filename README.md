@@ -53,15 +53,19 @@ fine-tuning, which was not done here.
 - No comparison against a student fine-tuned on references alone, so the gain attributable to the
   teacher signal is not isolated.
 
-## License and citation
+## License
 
-Released under the MIT License (see `LICENSE`). If you use this work, please cite:
+Code and results are released under the [Apache License 2.0](LICENSE). See [NOTICE](NOTICE).
+
+## Citation
 
 ```bibtex
 @misc{chawla2025t5distillation,
-  author       = {Chawla, Naman},
+  author       = {Naman Chawla},
   title        = {T5 Knowledge Distillation for Summarization},
   year         = {2025},
   howpublished = {\url{https://github.com/palindromeRice/Knowledge_Distillation_T5}}
 }
 ```
+
+Machine-readable citation metadata is in [CITATION.cff](CITATION.cff).
